@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+openai
+fastapi-mcp
+pydantic-settings
+pydantic
