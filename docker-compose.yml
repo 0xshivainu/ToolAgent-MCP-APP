@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "10000:10000"
+    environment:
+      - PORT=10000
+    # 如果需要掛載本地資料或其他設定，可以加volumes
+    # volumes:
+    #   - ./your-local-folder:/app

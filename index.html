@@ -3,73 +3,151 @@
 <head>
   <title>FastAPI MCP Article Generator</title>
   <style>
-    <style>
-  body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    max-width: 700px;
-    margin: auto;
-  }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+      background: #fafafa;
+    }
 
-  input {
-    width: 80%;
-    padding: 10px;
-    font-size: 16px;
-  }
+    input {
+      width: 70%;
+      padding: 10px;
+      font-size: 16px;
+    }
 
-  button {
-    padding: 10px 20px;
-    font-size: 16px;
-    margin-left: 10px;
-    cursor: pointer;
-  }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
 
-  pre#result {
-    background-color: #f0f0f0;
-    color: #333;
-    padding: 15px;
-    white-space: pre-wrap; /* 自動換行 */
-    word-wrap: break-word;
-    font-size: 16px;
-    border-radius: 5px;
-    margin-top: 20px;
-  }
-</style>
+    button:hover {
+      background-color: #45a049;
+    }
 
+    #result {
+      margin-top: 20px;
+      background-color: white;
+      border-radius: 6px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .metadata, .article, .review {
+      margin-bottom: 25px;
+    }
+
+    .metadata h2, .article h2, .review h2 {
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      color: #2F4F4F;
+    }
+
+    .metadata p, .article p {
+      margin: 5px 0;
+    }
+
+    ul {
+      padding-left: 20px;
+      margin: 5px 0;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
   </style>
 </head>
 <body>
   <h1>Generate Article</h1>
   <input type="text" id="topic" placeholder="Enter topic" />
   <button onclick="generateArticle()">Generate</button>
-  <pre id="result"></pre>
+
+  <div id="result"></div>
 
   <script>
     async function generateArticle() {
-      const topic = document.getElementById('topic').value;
+      const topic = document.getElementById('topic').value.trim();
       if (!topic) {
         alert('Please enter a topic');
         return;
       }
-      console.log(topic);
-      const response = await fetch("https://toolagent-mcp-app.onrender.com/generate_article", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          topic: topic
-        })
-      });
 
+      document.getElementById('result').innerHTML = 'Loading...';
 
-      if (!response.ok) {
-        document.getElementById('result').textContent = 'Error: ' + response.statusText;
-        return;
+      try {
+        const response = await fetch("http://0.0.0.0:10000/generate_article", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ topic: topic })
+        });
+
+        if (!response.ok) {
+          document.getElementById('result').textContent = 'Error: ' + response.statusText;
+          return;
+        }
+
+        const data = await response.json();
+        const content = data.result;
+        let parsed;
+
+        try {
+          parsed = JSON.parse(content);
+        } catch (err) {
+          document.getElementById('result').textContent = "Error parsing response JSON:\n" + content;
+          return;
+        }
+
+        // Build HTML output based on the structured JSON
+        const metadata = parsed.metadata || {};
+        const article = parsed.article || {};
+        const review = parsed.review || {};
+
+        const html = `
+          <div class="metadata">
+            <h2>Article Metadata</h2>
+            <p><strong>Title:</strong> ${metadata.title || ''}</p>
+            <p><strong>Date:</strong> ${metadata.date || ''}</p>
+            <p><strong>Reading Level:</strong> ${metadata.reading_level || ''}</p>
+            <p><strong>Word Count:</strong> ${metadata.word_count || ''}</p>
+          </div>
+
+          <div class="article">
+            <h2>Article</h2>
+            <h3>${article.headline || ''}</h3>
+            ${article.body ? article.body.split('\n').map(p => `<p>${p}</p>`).join('') : ''}
+            <p><em>${article.conclusion || ''}</em></p>
+          </div>
+
+          <div class="review">
+            <h2>TOEIC Review</h2>
+            <h4>Vocabulary</h4>
+            <ul>${(review.vocabulary || []).map(item => `<li>${item}</li>`).join('')}</ul>
+
+            <h4>Phrases</h4>
+            <ul>${(review.phrases || []).map(item => `<li>${item}</li>`).join('')}</ul>
+
+            <h4>Sentence Patterns</h4>
+            <ul>${(review.sentence_patterns || []).map(item => `<li>${item}</li>`).join('')}</ul>
+          </div>
+        `;
+
+        document.getElementById('result').innerHTML = html;
+      } catch (error) {
+        document.getElementById('result').textContent = 'Unexpected error: ' + error.message;
       }
-
-      const data = await response.json();
-      document.getElementById('result').textContent = data.result || JSON.stringify(data);
     }
   </script>
 </body>

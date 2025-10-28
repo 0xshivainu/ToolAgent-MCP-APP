@@ -78,7 +78,23 @@ async def generate_article(parameters: GenerateArticleParams = Body(...)):
         model="gemini-2.0-flash",
         messages=[{"role": "user", "content": prompt}]
     )
-    return {"result": response.choices[0].message.content}
+    raw_content = response.choices[0].message.content
+
+    # 清除 markdown code fences 標記
+    if raw_content.startswith("```"):
+        lines = raw_content.splitlines()
+        # 移除第一行的內容（開頭的 ``````json）
+        first_line = lines[0]
+        if first_line.startswith("```"):
+            lines = lines[1:]  # 取出除第一行外的剩餘內容
+        # 重組內容
+        raw_content = "\n".join(lines)
+
+        # 若結尾有 ```，則去除
+        if raw_content.endswith("```"):
+            raw_content = raw_content[:-3].strip()
+
+    return {"result": raw_content}
 
 
 if __name__ == "__main__":
