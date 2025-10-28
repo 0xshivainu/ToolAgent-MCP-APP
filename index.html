@@ -2,6 +2,41 @@
 <html>
 <head>
   <title>FastAPI MCP Article Generator</title>
+  <style>
+    <style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    max-width: 700px;
+    margin: auto;
+  }
+
+  input {
+    width: 80%;
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+
+  pre#result {
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 15px;
+    white-space: pre-wrap; /* 自動換行 */
+    word-wrap: break-word;
+    font-size: 16px;
+    border-radius: 5px;
+    margin-top: 20px;
+  }
+</style>
+
+  </style>
 </head>
 <body>
   <h1>Generate Article</h1>
@@ -16,14 +51,17 @@
         alert('Please enter a topic');
         return;
       }
-
-      const response = await fetch('https://toolagent-mcp-app.onrender.com/generate_article', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+      console.log(topic);
+      const response = await fetch("https://toolagent-mcp-app.onrender.com/generate_article", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({
-          parameters: {topic}
+          topic: topic
         })
       });
+
 
       if (!response.ok) {
         document.getElementById('result').textContent = 'Error: ' + response.statusText;

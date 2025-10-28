@@ -3,7 +3,7 @@ from fastapi_mcp import FastApiMCP
 from openai import OpenAI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-
+import time
 from config import settings
 
 app = FastAPI()
@@ -40,9 +40,39 @@ async def generate_article(parameters: GenerateArticleParams = Body(...)):
     if not topic:
         raise HTTPException(status_code=400, detail="Missing parameter: topic")
     prompt = f"""
-    You are a TOEIC expert. Generate a timely English news article about {topic},
-    mark the date and time, and include a review section listing important TOEIC vocabulary,
-    phrases, and sentence structures used in the article.
+    You are a TOEIC instructor and English news writer.
+    Your task is to create a structured TOEIC learning news article about: "{topic}".
+
+    ## OUTPUT FORMAT
+    Respond strictly in this JSON-like structure (without code fences):
+    {{
+        "metadata": {{
+            "title": string,
+            "date": string (format: YYYY-MM-DD),
+            "reading_level": "B1-B2",
+            "word_count": integer
+        }},
+        "article": {{
+            "headline": string,
+            "body": string (3–5 short paragraphs, clear and concise),
+            "conclusion": string
+        }},
+        "review": {{
+            "vocabulary": [ "word: definition", ... (5–10 items) ],
+            "phrases": [ "phrase: meaning", ... (3–5 items) ],
+            "sentence_patterns": [ "pattern: example usage", ... (3–5 items) ]
+        }}
+    }}
+
+    ## STYLE REQUIREMENTS
+    - Write in natural English suitable for TOEIC learners.
+    - Keep sentences under 20 words when possible.
+    - Use current, fact-based, real-world tone (e.g., economy, technology, workplace, travel).
+    - Avoid complex idioms or slang.
+    - Provide helpful, relevant learning material in the review section.
+
+    ## GOAL
+    Produce a clear, educational English article that sounds authentic and is visually structured for rendering on a frontend application.
     """
     response = client.chat.completions.create(
         model="gemini-2.0-flash",
