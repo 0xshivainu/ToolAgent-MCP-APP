@@ -2,10 +2,20 @@ from fastapi import FastAPI, Body, HTTPException
 from fastapi_mcp import FastApiMCP
 from openai import OpenAI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 或 ["*"] 開發階段用
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 mcp = FastApiMCP(app)
 # mcp.mount_http()
 
